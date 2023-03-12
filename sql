@@ -9,4 +9,23 @@ UPDATE courses
 SET teacher_id = <teacherID>
 WHERE course_id IN (<courseID>);
 
-//3)3)Students can browse and list all the available courses and see the course title and course teacher’s name. 
+//3)Students can browse and list all the available courses and see the course title and course teacher’s name. 
+
+CREATE TABLE teacher (
+  TeacherID INT AUTO_INCREMENT PRIMARY KEY,
+  UserID INT,
+  Name VARCHAR(255)
+);
+
+INSERT INTO teacher (UserID, Name)
+SELECT UserID, Name
+FROM users
+WHERE RoleID = 2;
+
+ALTER TABLE teacher AUTO_INCREMENT = 1;
+
+SELECT courses.CourseID, courses.Title, teacher.Name AS TeacherName
+FROM courses
+INNER JOIN teacher
+ON courses.TeacherID = teacher.TeacherID
+WHERE courses.isAvailable = 1;
