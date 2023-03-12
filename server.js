@@ -59,6 +59,34 @@ app.get("/api/courses", (req, res, next) => {
     });
 });
 
+// Enable a course
+app.put('/courses/enable/:id', (req, res) => {
+  const courseId = req.params.id;
+  const sql = `UPDATE courses SET isAvailable = 1 WHERE courseID = ?`;
+
+  db.run(sql, [courseId], function(err) {
+    if (err) {
+      return console.error(err.message);
+    }
+    console.log(`Course ${courseId} has been enabled`);
+    res.send(`Course ${courseId} has been enabled`);
+  });
+});
+
+// Disable a course
+app.put('/courses/disable/:id', (req, res) => {
+  const courseId = req.params.id;
+  const sql = `UPDATE courses SET isAvailable = 0 WHERE courseID = ?`;
+
+  db.run(sql, [courseId], function(err) {
+    if (err) {
+      return console.error(err.message);
+    }
+    console.log(`Course ${courseId} has been disabled`);
+    res.send(`Course ${courseId} has been disabled`);
+  });
+});
+
 app.get("/api/enrolments", (req, res, next) => {
     const sql = "select * from enrolments"
     let params = []
