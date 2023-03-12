@@ -104,6 +104,51 @@ app.put('/teachers/:teacherId/courses', (req, res) => {
 });
 
 
+// Q3:Students can browse and list all the available courses and see the course title and course teacher’s name. 
+// connect to the database
+db.connect((err) => {
+  if (err) throw err;
+  console.log('Connected to database!');
+  
+  // create the teacher table firstly
+  db.query(`CREATE TABLE IF NOT EXISTS teacher (
+    TeacherID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT,
+    Name VARCHAR(255)
+  )`, (err, result) => {
+    if (err) throw err;
+    console.log('Teacher table created!');
+    
+    // insert data into the teacher table
+    db.query(`INSERT INTO teacher (UserID, Name)
+    SELECT UserID, Name
+    FROM users
+    WHERE RoleID = 2`, (err, result) => {
+      if (err) throw err;
+      console.log(`${result.affectedRows} rows inserted into teacher table.`);
+      
+      // reset the auto-increment value of the teacher table
+      db.query('ALTER TABLE teacher AUTO_INCREMENT = 1', (err, result) => {
+        if (err) throw err;
+        console.log('Auto-increment value of teacher table reset!');
+      });
+    });
+  });
+});
+
+// define a route to browse and list available courses with course title and teacher's name
+app.get('/courses', (req, res) => {
+  // query the courses table and join the teacher table to get the teacher's name
+  db.query(`SELECT courses.CourseID, courses.Title, teacher.Name AS TeacherName
+    FROM courses
+    INNER JOIN teacher
+    ON courses.TeacherID = teacher.TeacherID
+    WHERE courses.isAvailable = 1`, (err, result) => {
+    if (err) throw err;
+    res.send(result);
+  });
+});
+
 app.get("/api/enrolments", (req, res, next) => {
     const sql = "select * from enrolments"
     let params = []
