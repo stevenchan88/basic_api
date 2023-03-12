@@ -1,4 +1,5 @@
-//1Admins should be able to enable or disable the availability of a course 
+// to run the following SQL in the workbench
+//Q1:Admins should be able to enable or disable the availability of a course 
 //To enable a course:
 UPDATE courses SET is_available = 1 WHERE courseID = {courseID};
 //To disable a course:
