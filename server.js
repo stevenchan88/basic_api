@@ -87,6 +87,23 @@ app.put('/courses/disable/:id', (req, res) => {
   });
 });
 
+// Assign courses to a teacher
+app.put('/teachers/:teacherId/courses', (req, res) => {
+  const teacherId = req.params.teacherId;
+  const courseIds = req.body.courseIds;
+  const placeholders = courseIds.map(() => '?').join(',');
+  const sql = `UPDATE courses SET teacherID = ? WHERE courseID IN (${placeholders})`;
+
+  db.run(sql, [teacherId, ...courseIds], function(err) {
+    if (err) {
+      return console.error(err.message);
+    }
+    console.log(`Courses ${courseIds.join(', ')} have been assigned to teacher ${teacherId}`);
+    res.send(`Courses ${courseIds.join(', ')} have been assigned to teacher ${teacherId}`);
+  });
+});
+
+
 app.get("/api/enrolments", (req, res, next) => {
     const sql = "select * from enrolments"
     let params = []
