@@ -1,9 +1,9 @@
-var sqlite3 = require('sqlite3').verbose()
+const sqlite3 = require('sqlite3').verbose()
 
 
 const DBSOURCE = "db.sqlite"
 
-let db = new sqlite3.Database(DBSOURCE, (err) => {
+let db = new sqlite3.Database(DBSOURCE,sqlite3.OPEN_READWRITE, (err) => {
     if (err) {
         // Cannot open database
         console.error(err.message)
@@ -38,9 +38,9 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
                 }else{
                     // Table just created, creating some rows
                     let insert = 'INSERT INTO courses (courseID, title,teacherID, isAvailable) VALUES (?,?,?,?)'
-                    db.run(insert, [1,'Data structures',6,0])
-                    db.run(insert, [2,'Databases',5,0])
-                    db.run(insert, [3,'Machine learning',0,0])
+                    db.run(insert, [1,'Data structures',6,1])
+                    db.run(insert, [2,'Databases',5,1])
+                    db.run(insert, [3,'Machine learning',0,1])
                     db.run(insert, [4,'Network security',0,0])
                     db.run(insert, [5,'Computer graphics',0,0])
                     db.run(insert, [6,'Computer programming I',0,0])
