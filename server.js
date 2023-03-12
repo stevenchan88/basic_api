@@ -59,7 +59,7 @@ app.get("/api/courses", (req, res, next) => {
     });
 });
 
-// Enable a course
+// Q1:Enable a course
 app.put('/courses/enable/:id', (req, res) => {
   const courseId = req.params.id;
   const sql = `UPDATE courses SET isAvailable = 1 WHERE courseID = ?`;
@@ -73,7 +73,7 @@ app.put('/courses/enable/:id', (req, res) => {
   });
 });
 
-// Disable a course
+// Q1:Disable a course
 app.put('/courses/disable/:id', (req, res) => {
   const courseId = req.params.id;
   const sql = `UPDATE courses SET isAvailable = 0 WHERE courseID = ?`;
@@ -87,7 +87,7 @@ app.put('/courses/disable/:id', (req, res) => {
   });
 });
 
-// Assign courses to a teacher
+// Q2:Assign courses to a teacher
 app.put('/teachers/:teacherId/courses', (req, res) => {
   const teacherId = req.params.teacherId;
   const courseIds = req.body.courseIds;
