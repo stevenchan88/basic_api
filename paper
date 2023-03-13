@@ -1,0 +1,78 @@
+
+
+GROUP PROJECT:MYSQL & APIS
+
+
+
+By
+
+Group B
+
+
+Submitted to
+	
+The University of Liverpool
+
+MASTER-OF-SCIENCE-COMPUTER SCIENCE
+
+
+
+Databases and Information Systems
+
+
+Word Count: 1500
+
+20/03/2023
+
+
+GROUP PROJECT:MYSQL & APIS
+ 
+
+Submitted to
+	
+The University of Liverpool
+
+
+Word Count: 1500
+
+20/03/2023
+
+TABLE OF CONTENTS
+
+	Page
+Chapter 1. Introduction	2
+Chapter 2. SQL Query Creation Based On the Functional Requirements	3
+2.1	Development of a NodeJS and Express Application for API Functionality	4
+2.2	Implementation of Middleware for User Role-Based Access Control	5
+2.2	Testing and Demonstration of API Execution Using Postman	5
+
+Chapter 3. Conclusions	6
+REFERENCES	7
+                    
+
+Chapter 1.  Introduction
+In this paper, we outline the process of developing a comprehensive database system for a college course database.Specifically, we will detail the creation of SQL queries required to meet the functional requirements of the database, the development of a NodeJS and Express application to connect to the database and add API functionality, the implementation of middleware to restrict access based on user roles, and the testing and demonstration of API execution using Postman. The successful implementation of such a database system can significantly enhance the efficiency and accuracy of academic data management in college institutions. 
+
+Chapter 2.  Design and Implementation of a Node.js Web Server with SQLite Database Connectivity
+The first paragraph describes the design decisions and approach for the "package.json" file, which helps to ensure that the application has all the necessary dependencies installed and correctly configured.
+The second paragraph describes the "database.js" file, which is used for creating and manipulating SQLite databases . The initial step involves importing the SQLite3 module, which is a Node.js package that provides an API for interaction with SQLite databases. The module is used to establish a new database connection, and then tables are created for roles, courses, enrolments, and users. The tables are created using SQL commands, and data is inserted into the tables using the db.run() method. 
+The third paragraph describes the "server.js" file, which is used for creating a Node.js server using the Express framework. The file is responsible for creating an Express application, defining server port, setting up endpoints and route handlers, and handling requests that do not match any of the defined routes. The approach involves importing the "express" module, creating an instance of the application, and defining endpoints using route handlers. The route handlers are used to handle HTTP requests from clients and return JSON responses. The approach also involves setting up a middleware function to handle requests that do not match any of the defined routes, ensuring that the server always returns a response to the client.
+The Configuration
+In the “package.json” file, which is a configuration file used by Node.js-based applications to specify the dependencies and other metadata, which including the name of the package, a brief description of the package, the main entry point of the package, etc
+Creating SQLite Database and Tables using Node.js
+The "database.js" file starts by importing the SQLite3 module and invoking the verbose() method to enable detailed stack traces for debugging. The variable DBSOURCE is then initialized with the value "db.sqlite". The SQLite3 module is then used to establish a new database connection in Node.js using the new sqlite3.Database() method, which takes the path to the database file and a callback function as arguments. If there is an error, the code logs the error message to the console and throws the error. If the connection is successful, the code logs a message indicating the successful connection.
+After establishing the connection, tables for "roles", "courses", "enrolments", and "users" are created using the "CREATE TABLE" command. For example, the "roles" table contains two columns, "roleID" and "role". The "roleID" column is an integer column and serves as the primary key with the PRIMARY KEY constraint. The "role" column is a varchar column that cannot be null with the NOT NULL constraint.
+To insert data into the "roles" table, the db.run() method is used with a callback function executed after the SQL query completes. The callback function inserts three rows of data into the "roles" table utilizing the INSERT INTO statement. The creation of other tables follows a similar method as above.
+Creating a Node.js server using the Express framework
+In the "server.js" file, an Express application is created and initialized by importing and assigning the "express" module to a variable. The "database.js" file is imported and assigned to a variable called "db." The server port is set to 8000 by creating a constant variable named "HTTP_PORT." The application listens on this port using the "listen" method of the app object. A callback function is provided to the "listen" method, which creates a message string and substitutes the "%PORT%" placeholder with the value of the "HTTP_PORT" constant.
+The root endpoint is established by setting up a route handler for the HTTP GET method on the "/" path of the application. A JSON response containing a key-value pair of "message" and "Ok" is sent to the client, indicating that the request was successful and serving as a basic health check endpoint for the application.
+For the "/api/user" path, a SQL query selects all records from a table named "user." Inside the callback function, the "db.all" method is used to execute the query. If an error occurs during query execution, the callback function sends an error response to the client with a 400 status code and a JSON object containing an "error" key and the error message. If the query is successful, the callback function sends a JSON response to the client with a "message" key set to "success" and a "data" key containing an array of rows retrieved from the "user" table. The HTTP GET method on other paths such as "/api/roles", "/api/courses", and "/api/enrolments" follows the same creation methods.
+A middleware function handles all requests that do not match any of the defined route handlers. This function sets the HTTP status code of the response to 404 (Not Found), indicating that the requested resource could not be found on the server. However, no response body is sent back to the client, as the middleware function ends without calling any further methods on the "res" object. This middleware function serves as a catch-all endpoint for any requests that do not match any of the defined routes, ensuring that the server always returns a response to the client.
+
+Chapter 3.  
+Conclusions
+The ERD
+
+REFERENCES
+Fathima Nifra, N. and Razeeth, S., (2022) 
+
