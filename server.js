@@ -55,22 +55,49 @@ app.post('/course/:courseID/teacher', async (req, res) => {
 })
 
 // Endpoint for listing all available courses
+// Create the teacher table and insert data
+db.query(`CREATE TABLE IF NOT EXISTS teacher (
+    TeacherID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT,
+    Name VARCHAR(255)
+  )`, (err, result) => {
+    if (err) throw err;
+    console.log('Teacher table created!');
+    
+    // Insert data into the teacher table
+    db.query(`INSERT INTO teacher (UserID, Name)
+    SELECT UserID, Name
+    FROM users
+    WHERE RoleID = 2`, (err, result) => {
+      if (err) throw err;
+      console.log(`${result.affectedRows} rows inserted into teacher table.`);
+      
+      // Reset the auto-increment value of the teacher table
+      db.query('ALTER TABLE teacher AUTO_INCREMENT = 1', (err, result) => {
+        if (err) throw err;
+        console.log('Auto-increment value of teacher table reset!');
+      });
+    });
+  });
+
+// Endpoint for listing all available courses
 app.get('/courses', async (req, res) => {
-    const userID = req.body.userID
-    const userRole = await getUserRole(userID)
-    const query = 'SELECT courses.courseID, courses.title, user.name AS teacherName FROM courses LEFT JOIN user ON courses.teacherID = user.userID WHERE courses.isAvailable = 1'
+    const userID = req.body.userID;
+    const userRole = await getUserRole(userID);
+    const query = `SELECT courses.CourseID, courses.Title, teacher.Name AS TeacherName FROM courses INNER JOIN teacher ON courses.TeacherID = teacher.TeacherID WHERE courses.isAvailable = 1`;
     db.all(query, [], (err, rows) => {
-        if (err) res.status(500).send(err.message)
+        if (err) res.status(500).send(err.message);
         else {
             if (userRole === 3) { // Students can only see the course title and teacher name
-                const courses = rows.map(row => ({title: row.title, teacherName: row.teacherName}))
-                res.send(courses)
+                const courses = rows.map(row => ({title: row.Title, teacherName: row.TeacherName}));
+                res.send(courses);
             } else { // Admins and teachers can see the course ID, title and teacher name
-                res.send(rows)
+                res.send(rows);
             }
         }
-    })
-})
+    });
+});
+
 
 // Endpoint for enrolling in a course
 app.post('/course/:courseID/enroll', async (req, res) => {
