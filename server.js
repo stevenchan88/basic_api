@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 const getUserRole = (userID) => {
     console.log(userID)
     return new Promise((resolve, reject) => {
-        db.get('SELECT roleID FROM user WHERE userID = ?', [userID], (err, row) => {
+        db.get('SELECT roleID FROM users WHERE userID = ?', [userID], (err, row) => {
             if (err) reject(err)
             else resolve(row.roleID)
         })
@@ -18,12 +18,12 @@ const getUserRole = (userID) => {
 }
 
 
-app.post('/test', (req, res) => {
-    console.log(req.body)
-    res.send('Received request')
-})
 
-// Endpoint for enabling/disabling a course
+// 1: Endpoint for enabling/disabling a course
+// To use this endpoint, include the following elements in the request body:
+// - userID: (integer) the ID of the user making the request (required)
+// - courseID: (integer) the ID of the course to be enabled/disabled (required)
+// - isAvailable: (boolean) a boolean value indicating whether the course should be enabled (true) or disabled (false).
 app.post('/course/:courseID/availability', async (req, res) => {
     console.log(req.body)
     const userID = req.body.userID
@@ -39,7 +39,10 @@ app.post('/course/:courseID/availability', async (req, res) => {
     })
 })
 
-// Endpoint for assigning a teacher to a course
+// 2: Endpoint for assigning a teacher to a course
+// To use this endpoint, include the following elements in the request body:
+// - userID: (integer) the ID of the user making the request (required, must be Admin)
+// - teacherID: (integer) the ID of the teacher to be assigned to the course (required)
 app.post('/course/:courseID/teacher', async (req, res) => {
     const userID = req.body.userID
     const userRole = await getUserRole(userID)
@@ -54,65 +57,62 @@ app.post('/course/:courseID/teacher', async (req, res) => {
     })
 })
 
-// Endpoint for listing all available courses
-// Create the teacher table and insert data
-db.query(`CREATE TABLE IF NOT EXISTS teacher (
-    TeacherID INT AUTO_INCREMENT PRIMARY KEY,
-    UserID INT,
-    Name VARCHAR(255)
-  )`, (err, result) => {
-    if (err) throw err;
-    console.log('Teacher table created!');
-    
-    // Insert data into the teacher table
-    db.query(`INSERT INTO teacher (UserID, Name)
-    SELECT UserID, Name
-    FROM users
-    WHERE RoleID = 2`, (err, result) => {
-      if (err) throw err;
-      console.log(`${result.affectedRows} rows inserted into teacher table.`);
-      
-      // Reset the auto-increment value of the teacher table
-      db.query('ALTER TABLE teacher AUTO_INCREMENT = 1', (err, result) => {
-        if (err) throw err;
-        console.log('Auto-increment value of teacher table reset!');
-      });
-    });
-  });
 
-// Endpoint for listing all available courses
 app.get('/courses', async (req, res) => {
     const userID = req.body.userID;
+    console.log(userID)
     const userRole = await getUserRole(userID);
-    const query = `SELECT courses.CourseID, courses.Title, teacher.Name AS TeacherName FROM courses INNER JOIN teacher ON courses.TeacherID = teacher.TeacherID WHERE courses.isAvailable = 1`;
-    db.all(query, [], (err, rows) => {
-        if (err) res.status(500).send(err.message);
-        else {
-            if (userRole === 3) { // Students can only see the course title and teacher name
-                const courses = rows.map(row => ({title: row.Title, teacherName: row.TeacherName}));
-                res.send(courses);
-            } else { // Admins and teachers can see the course ID, title and teacher name
-                res.send(rows);
-            }
+    let query;
+    if (userRole === 3) { // Students can only see the course title and teacher name
+        query = `SELECT courses.title, users.name AS TeacherName FROM courses 
+                 LEFT JOIN users ON courses.teacherID = users.userID
+                 WHERE courses.isAvailable = 1`;
+    } else { // Admins and teachers can see the course ID, title and teacher name
+        query = `SELECT courses.courseID, courses.title, users.name AS TeacherName FROM courses 
+                 LEFT JOIN users ON courses.teacherID = users.userID
+                 WHERE courses.isAvailable = 1`;
+    }
+    db.each(query, (err, row) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send('Internal server error')
+            return
         }
-    });
-});
+
+        console.log(row) // Output the current row to the console
+        res.write(JSON.stringify(row) + '\n') // Send the current row to the client, with a newline character
+    }, (err, num) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send(err.message)
+            return
+        }
+
+        res.end() // Signal the end of the response to the client
+    })
+})
 
 
-// Endpoint for enrolling in a course
+
+
+// 4: Endpoint for enrolling in a course
+// To use this endpoint, include the following element in the request body:
+// - userID: (integer) the ID of the student who is enrolling in the course (required)
+// - courseID: (integer) the ID of the course in which to enrol (required)
 app.post('/course/:courseID/enroll', async (req, res) => {
     const userID = req.body.userID
+    const courseID = req.params.courseID
     const userRole = await getUserRole(userID)
     if (userRole !== 3) { // Only students can enroll in a course
         res.status(403).send('Access Denied')
         return
     }
-    db.get('SELECT * FROM enrolments WHERE courseID = ? AND userID = ?', [req.params.courseID, userID], (err, row) => {
+    db.get('SELECT * FROM enrolments WHERE courseID = ? AND userID = ?', [courseID, userID], (err, row) => {
         if (err) res.status(500).send(err.message)
         else if (row) { // Student is already enrolled in the course
             res.status(400).send('Already enrolled in the course')
         } else { // Student is not enrolled in the course
-            db.run('INSERT INTO enrolments (courseID, userID) VALUES (?, ?)', [req.params.courseID, userID], (err) => {
+            db.run('INSERT INTO enrolments (courseID, userID) VALUES (?, ?)', [courseID, userID], (err) => {
                 if (err) res.status(500).send(err.message)
                 else res.sendStatus(200)
             })
@@ -120,7 +120,11 @@ app.post('/course/:courseID/enroll', async (req, res) => {
     })
 })
 
-// Endpoint for passing/failing a student
+// 5: Endpoint for passing/failing a student
+// To use this endpoint, include the following elements in the request body:
+// - mark: (boolean) a boolean value indicating whether the student has passed (true) or failed (false).
+//   This element is optional; if not provided, the student's mark will not be changed.
+// - userID: (integer) the ID of the teacher making the request (required)
 app.post('/enrollment/:enrollmentID/grade', async (req, res) => {
     const userID = req.body.userID
     const userRole = await getUserRole(userID)
@@ -135,17 +139,93 @@ app.post('/enrollment/:enrollmentID/grade', async (req, res) => {
     })
 })
 
-app.get('/api/courses', (req, res) => {
-    db.all('SELECT * FROM courses', (err, rows) => {
+app.get('/view/courses', (req, res) => {
+    db.each('SELECT * FROM courses', (err, row) => {
         if (err) {
             console.error(err.message)
             res.status(500).send('Internal server error')
             return
         }
 
-        res.json(rows)
+        console.log(row) // Output the current row to the console
+        res.write(JSON.stringify(row) + '\n') // Send the current row to the client, with a newline character
+    }, (err, num) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send('Internal server error')
+            return
+        }
+
+        res.end() // Signal the end of the response to the client
     })
 })
+
+
+app.get('/view/users', (req, res) => {
+    db.each('SELECT * FROM users', (err, row) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send('Internal server error')
+            return
+        }
+
+        console.log(row) // Output the current row to the console
+        res.write(JSON.stringify(row) + '\n') // Send the current row to the client
+    }, (err, num) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send('Internal server error')
+            return
+        }
+
+        res.end() // Signal the end of the response to the client
+    })
+})
+
+
+app.get('/view/enrolments', (req, res) => {
+    db.each('SELECT * FROM enrolments', (err, row) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send('Internal server error')
+            return
+        }
+
+        console.log(row) // Output the current row to the console
+        res.write(JSON.stringify(row) + '\n') // Send the current row to the client, with a newline character
+    }, (err, num) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send('Internal server error')
+            return
+        }
+
+        res.end() // Signal the end of the response to the client
+    })
+})
+
+
+app.get('/view/roles', (req, res) => {
+    db.each('SELECT * FROM roles', (err, row) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send('Internal server error')
+            return
+        }
+
+        console.log(row) // Output the current row to the console
+        res.write(JSON.stringify(row) + '\n') // Send the current row to the client, with a newline character
+    }, (err, num) => {
+        if (err) {
+            console.error(err.message)
+            res.status(500).send('Internal server error')
+            return
+        }
+
+        res.end() // Signal the end of the response to the client
+    })
+})
+
 
 
 app.listen(3000, () => {

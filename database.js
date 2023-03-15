@@ -3,7 +3,7 @@ const sqlite3 = require('sqlite3').verbose()
 
 const DBSOURCE = "db.sqlite"
 
-let db = new sqlite3.Database(DBSOURCE,sqlite3.OPEN_READWRITE, (err) => {
+let db = new sqlite3.Database(DBSOURCE, (err) => {
     if (err) {
         // Cannot open database
         console.error(err.message)
@@ -57,7 +57,7 @@ let db = new sqlite3.Database(DBSOURCE,sqlite3.OPEN_READWRITE, (err) => {
             courseID INTEGER NOT NULL,
             userID INTEGER NOT NULL,
             FOREIGN KEY(courseID) REFERENCES courses(courseID),
-            FOREIGN KEY(userID) REFERENCES user(userID)
+            FOREIGN KEY(userID) REFERENCES users(userID)
         )`,
             (err) => {
                 if (err) {
@@ -70,7 +70,7 @@ let db = new sqlite3.Database(DBSOURCE,sqlite3.OPEN_READWRITE, (err) => {
                 }
             });
 
-        db.run(`CREATE TABLE user (
+        db.run(`CREATE TABLE users (
             userID INTEGER PRIMARY KEY AUTOINCREMENT,
             name text,
             roleID INTEGER NOT NULL,
@@ -81,7 +81,7 @@ let db = new sqlite3.Database(DBSOURCE,sqlite3.OPEN_READWRITE, (err) => {
                     // Table already created
                 }else{
                     // Table just created, creating some rows
-                    let insert = 'INSERT INTO user (name, roleID) VALUES (?,?)'
+                    let insert = 'INSERT INTO users (name, roleID) VALUES (?,?)'
                     db.run(insert, ['Clark Taylor',1])
                     db.run(insert, ['Natalie Armstrong',1])
                     db.run(insert, ['Max Barrett',2])
