@@ -8,7 +8,6 @@ app.use(bodyParser.urlencoded({ extended: true }))
 
 // Helper function to get user role
 const getUserRole = (userID) => {
-    console.log(userID)
     return new Promise((resolve, reject) => {
         db.get('SELECT roleID FROM users WHERE userID = ?', [userID], (err, row) => {
             if (err) reject(err)
@@ -22,20 +21,21 @@ const getUserRole = (userID) => {
 // 1: Endpoint for enabling/disabling a course
 // To use this endpoint, include the following elements in the request body:
 // - userID: (integer) the ID of the user making the request (required)
-// - courseID: (integer) the ID of the course to be enabled/disabled (required)
 // - isAvailable: (boolean) a boolean value indicating whether the course should be enabled (true) or disabled (false).
 app.post('/course/:courseID/availability', async (req, res) => {
     console.log(req.body)
     const userID = req.body.userID
+    const courseID = req.params.courseID
     const userRole = await getUserRole(userID)
+    console.log(`userRole: ${userRole}`)
     if (userRole !== 1) { // Only admins can enable/disable a course
         res.status(403).send('Access Denied')
         return
     }
     const isAvailable = req.body.isAvailable ? 1 : 0
-    db.run('UPDATE courses SET isAvailable = ? WHERE courseID = ?', [isAvailable, req.body.courseID], (err) => {
+    db.run('UPDATE courses SET isAvailable = ? WHERE courseID = ?', [isAvailable, courseID], (err) => {
         if (err) res.status(500).send(err.message)
-        else res.sendStatus(200)
+        else res.status(200).send(`user ${userID} enabled course ${courseID}`)
     })
 })
 
@@ -45,15 +45,16 @@ app.post('/course/:courseID/availability', async (req, res) => {
 // - teacherID: (integer) the ID of the teacher to be assigned to the course (required)
 app.post('/course/:courseID/teacher', async (req, res) => {
     const userID = req.body.userID
+    const courseID = req.params.courseID
     const userRole = await getUserRole(userID)
     if (userRole !== 1) { // Only admins can assign a teacher to a course
         res.status(403).send('Access Denied')
         return
     }
     const teacherID = req.body.teacherID
-    db.run('UPDATE courses SET teacherID = ? WHERE courseID = ?', [teacherID, req.params.courseID], (err) => {
+    db.run('UPDATE courses SET teacherID = ? WHERE courseID = ?', [teacherID, courseID], (err) => {
         if (err) res.status(500).send(err.message)
-        else res.sendStatus(200)
+        else res.status(200).send(`Teacher ${teacherID} assigned to course ${courseID}`)
     })
 })
 
@@ -114,7 +115,7 @@ app.post('/course/:courseID/enroll', async (req, res) => {
         } else { // Student is not enrolled in the course
             db.run('INSERT INTO enrolments (courseID, userID) VALUES (?, ?)', [courseID, userID], (err) => {
                 if (err) res.status(500).send(err.message)
-                else res.sendStatus(200)
+                else res.status(200).send(`Used ${usedID} enrolled onto course ${courseID}`)
             })
         }
     })
@@ -135,7 +136,7 @@ app.post('/enrollment/:enrollmentID/grade', async (req, res) => {
     const mark = req.body.mark ? 1 : 0
     db.run('UPDATE enrolments SET mark = ? WHERE enrolmentID = ?', [mark, req.params.enrollmentID], (err) => {
         if (err) res.status(500).send(err.message)
-        else res.sendStatus(200)
+        else res.status(200).send(`Grade ${mark} given to user ${userID}`)
     })
 })
 
