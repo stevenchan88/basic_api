@@ -27,6 +27,8 @@ SELECT courses.courseID, courses.title, users.name AS TeacherName FROM courses
 -- INSERT INTO enrolments (courseID, userID) VALUES (?, ?)
 -- to check if the student (userID =10) is already enrolled in a specific course (courseID=1)
 SELECT * FROM enrolments WHERE courseID = 1 AND userID = 10;
+-- to check if the the courseID =1 is available or not firstly
+SELECT * FROM courses WHERE courseID = 1 AND isAvailable = 1;
 -- student (userID =10) enrolles in a specific course (courseID=1)
 INSERT INTO enrolments (courseID, userID) VALUES (1, 10);
 select *  from my_schema.enrolments;
